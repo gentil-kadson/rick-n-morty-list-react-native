@@ -7,27 +7,28 @@ import { useState, useEffect } from "react";
 import CharactersListTitle from "./CharactersListTitle";
 import CharacterCard from "./CharacterCard";
 import { FlatList } from "react-native";
+import ListLoadingFooter from "./ListLoadingFooter";
 
 export default function CharactersList() {
   const [page, setPage] = useState<number>(1);
   const [characters, setCharacters] = useState<CharacterCardInfo[]>([]);
-  const [hasMoreData, setHasMoreData] = useState<boolean>(false);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
 
   useEffect(() => {
-    if (hasMoreData) {
-      api
-        .get(`/character/?page=${page}`)
-        .then((response) => {
-          const charactersObjects: CharacterCardInfo[] = response.data.results;
-          setCharacters((prevCharacters) => [
-            ...prevCharacters,
-            ...charactersObjects,
-          ]);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    async function getData() {
+      const response = await api.get(`/character/?page=${page}`);
+      if (response.status === 200) {
+        const charactersObjects: CharacterCardInfo[] = response.data.results;
+        setCharacters((prevCharacters) => [
+          ...prevCharacters,
+          ...charactersObjects,
+        ]);
+      } else {
+        setHasMoreData(false);
+      }
     }
+
+    getData();
   }, [page]);
 
   return (
@@ -38,8 +39,9 @@ export default function CharactersList() {
       onEndReached={() => setPage((prev) => prev + 1)}
       onEndReachedThreshold={0.1}
       ListHeaderComponent={<CharactersListTitle />}
-      renderItem={({ item }) => <CharacterCard key={item.id} charInfo={item} />}
+      renderItem={({ item }) => <CharacterCard charInfo={item} />}
       keyExtractor={(item) => item.id.toString()}
+      ListFooterComponent={hasMoreData ? <ListLoadingFooter /> : <></>}
     />
   );
 }
