@@ -19,10 +19,10 @@ export default function CharactersList() {
       const response = await api.get(`/character/?page=${page}`);
       if (response.status === 200) {
         const charactersObjects: CharacterCardInfo[] = response.data.results;
-        setCharacters((prevCharacters) => [
-          ...prevCharacters,
-          ...charactersObjects,
-        ]);
+        setCharacters((prevCharacters) => {
+          const updatedCharacters = [...prevCharacters, ...charactersObjects];
+          return updatedCharacters;
+        });
       } else {
         setHasMoreData(false);
       }
@@ -40,8 +40,8 @@ export default function CharactersList() {
       onEndReachedThreshold={0.1}
       ListHeaderComponent={<CharactersListTitle />}
       renderItem={({ item }) => <CharacterCard charInfo={item} />}
-      keyExtractor={(item) => item.id.toString()}
-      ListFooterComponent={hasMoreData ? <ListLoadingFooter /> : <></>}
+      keyExtractor={(item, index) => index.toString()}
+      ListFooterComponent={hasMoreData ? <ListLoadingFooter /> : null}
     />
   );
 }
